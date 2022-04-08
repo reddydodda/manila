@@ -1,0 +1,145 @@
+{{/*
+Copyright 2017 The Openstack-Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/}}
+
+{{- if .Values.manifests.job_storage_init }}
+{{- $envAll := . }}
+
+{{- $serviceAccountName := "manila-storage-init" }}
+{{ tuple $envAll "storage_init" $serviceAccountName | include "helm-toolkit.snippets.kubernetes_pod_rbac_serviceaccount" }}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ $serviceAccountName }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ $serviceAccountName }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $serviceAccountName }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $serviceAccountName }}
+    namespace: {{ $envAll.Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: manila-storage-init
+spec:
+  template:
+    metadata:
+      labels:
+{{ tuple $envAll "manila" "storage-init" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 8 }}
+    spec:
+      serviceAccountName: {{ $serviceAccountName }}
+{{ dict "envAll" $envAll "application" "manila" | include "helm-toolkit.snippets.kubernetes_pod_security_context" | indent 6 }}
+      restartPolicy: OnFailure
+      nodeSelector:
+        {{ .Values.labels.job.node_selector_key }}: {{ .Values.labels.job.node_selector_value }}
+      initContainers:
+{{ tuple $envAll "storage_init" list | include "helm-toolkit.snippets.kubernetes_entrypoint_init_container" | indent 8 }}
+        {{- if include "manila.utils.is_ceph_share_configured" $envAll }}
+        - name: ceph-keyring-placement
+{{ tuple $envAll "manila_storage_init" | include "helm-toolkit.snippets.image" | indent 10 }}
+          securityContext:
+            runAsUser: 0
+          command:
+            - /tmp/ceph-admin-keyring.sh
+          volumeMounts:
+            - name: etcceph
+              mountPath: /etc/ceph
+            - name: manila-bin
+              mountPath: /tmp/ceph-admin-keyring.sh
+              subPath: ceph-admin-keyring.sh
+              readOnly: true
+            {{- if empty .Values.conf.ceph.admin_keyring }}
+            - name: ceph-keyring
+              mountPath: /tmp/client-keyring
+              subPath: key
+              readOnly: true
+            {{ end }}
+        {{ end }}
+      containers:
+        - name: manila-storage-init
+{{ tuple $envAll "manila_storage_init" | include "helm-toolkit.snippets.image" | indent 10 }}
+{{ tuple $envAll $envAll.Values.pod.resources.jobs.storage_init | include "helm-toolkit.snippets.kubernetes_resources" | indent 10 }}
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if include "manila.utils.is_ceph_share_configured" $envAll }}
+            - name: STORAGE_BACKEND
+              value: {{ index (index .Values.conf.backends (include "manila.utils.ceph_share_section_name" $envAll)) "share_driver" | quote }}
+            - name: CEPHFS_USER
+              value: {{ index (index .Values.conf.backends (include "manila.utils.ceph_share_section_name" $envAll)) "cephfs_auth_id" | quote }}
+            - name: CEPHFS_SECRET
+              value: {{ .Values.secrets.cephfs.share | quote }}
+            {{- end }}
+          command:
+            - /tmp/storage-init.sh
+          volumeMounts:
+            - name: manila-bin
+              mountPath: /tmp/storage-init.sh
+              subPath: storage-init.sh
+              readOnly: true
+            {{- if include "manila.utils.is_ceph_share_configured" $envAll }}
+            - name: etcceph
+              mountPath: /etc/ceph
+            - name: ceph-etc
+              mountPath: /etc/ceph/ceph.conf
+              subPath: ceph.conf
+              readOnly: true
+            {{- if empty .Values.conf.ceph.admin_keyring }}
+            - name: ceph-keyring
+              mountPath: /tmp/client-keyring
+              subPath: key
+              readOnly: true
+            {{- end }}
+            {{- end }}
+      volumes:
+        - name: manila-bin
+          configMap:
+            name: manila-bin
+            defaultMode: 0555
+        {{- if include "manila.utils.is_ceph_share_configured" $envAll }}
+        - name: etcceph
+          emptyDir: {}
+        - name: ceph-etc
+          configMap:
+            name: {{ .Values.ceph_client.configmap }}
+            defaultMode: 0444
+        {{- if empty .Values.conf.ceph.admin_keyring }}
+        - name: ceph-keyring
+          secret:
+            secretName: {{ .Values.ceph_client.user_secret_name }}
+        {{- end }}
+        {{- end }}
+{{- end }}

@@ -1,0 +1,1131 @@
+# Copyright 2017 The Openstack-Helm Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Default values for manila.
+# This is a YAML-formatted file.
+# Declare name/value pairs to be passed into your templates.
+# name: value
+
+storage: ceph
+
+labels:
+  api:
+    node_selector_key: openstack-control-plane
+    node_selector_value: enabled
+  job:
+    node_selector_key: openstack-control-plane
+    node_selector_value: enabled
+  scheduler:
+    node_selector_key: openstack-control-plane
+    node_selector_value: enabled
+  test:
+    node_selector_key: openstack-control-plane
+    node_selector_value: enabled
+  share:
+    node_selector_key: openstack-control-plane
+    node_selector_value: enabled
+
+release_group: null
+
+images:
+  tags:
+    test: docker.io/xrally/xrally-openstack:1.3.0
+    db_init: docker.io/openstackhelm/heat:ocata
+    manila_db_sync: registry.cicd.stg.taco/pike/ubuntu-source-manila-api:0.1.0
+    db_drop: docker.io/openstackhelm/heat:ocata
+    rabbit_init: docker.io/rabbitmq:3.7-management
+    ks_user: docker.io/openstackhelm/heat:ocata
+    ks_service: docker.io/openstackhelm/heat:ocata
+    ks_endpoints: docker.io/openstackhelm/heat:ocata
+    manila_api: registry.cicd.stg.taco/pike/ubuntu-source-manila-api:0.1.0
+    bootstrap: registry.cicd.stg.taco/pike/ubuntu-source-manila-api:0.1.0
+    manila_scheduler: docker.io/openstackhelm/manila:ocata
+    manila_share: registry.cicd.stg.taco/pike/ubuntu-source-manila-share:0.1.0
+    manila_storage_init: docker.io/port/ceph-config-helper:v1.10.3
+    dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.3.1
+    image_repo_sync: docker.io/docker:17.07.0
+  pull_policy: "IfNotPresent"
+  local_registry:
+    active: false
+    exclude:
+      - dep_check
+      - image_repo_sync
+
+pod:
+  user:
+    manila:
+      uid: 42424
+  affinity:
+    anti:
+      type:
+        default: preferredDuringSchedulingIgnoredDuringExecution
+      topologyKey:
+        default: kubernetes.io/hostname
+
+  mounts:
+    manila_api:
+      init_container: null
+      manila_api:
+    manila_scheduler:
+      init_container: null
+      manila_scheduler:
+    manila_share:
+      init_container: null
+      manila_share:
+    manila_tests:
+      init_container: null
+      manila_tests:
+  replicas:
+    api: 1
+    scheduler: 1
+    share: 1
+  lifecycle:
+    upgrades:
+      deployments:
+        revision_history: 3
+        pod_replacement_strategy: RollingUpdate
+        rolling_update:
+          max_unavailable: 1
+          max_surge: 3
+    disruption_budget:
+      api:
+        min_available: 0
+    termination_grace_period:
+      api:
+        timeout: 30
+  resources:
+    enabled: false
+    api:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "1024Mi"
+        cpu: "2000m"
+    scheduler:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "1024Mi"
+        cpu: "2000m"
+    share:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "1024Mi"
+        cpu: "2000m"
+    jobs:
+      bootstrap:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      rabbit_init:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      db_init:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      db_sync:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      db_drop:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      clean:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      storage_init:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      ks_endpoints:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      ks_service:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      ks_user:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      tests:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+      image_repo_sync:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "1024Mi"
+          cpu: "2000m"
+
+bootstrap:
+  enabled: true
+  ks_user: admin
+  bootstrap_conf_backends: true
+  share_types:
+    name:
+      driver_handles_share_server:
+      share_backend_name:
+
+network:
+  api:
+    ingress:
+      public: true
+      classes:
+        namespace: "nginx"
+        cluster: "nginx-cluster"
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+    external_policy_local: false
+    node_port:
+      enabled: false
+      port: 30877 ### XXX: ????????
+
+ceph_client:
+  configmap: ceph-etc
+  user_secret_name: pvc-ceph-client-key # XXX:
+
+conf:
+  paste:
+    composite:osapi_share:
+      use: call:manila.api:root_app_factory
+      /: apiversions
+      /v1: openstack_share_api
+      /v2: openstack_share_api_v2
+    composite:openstack_share_api:
+      use: call:manila.api.middleware.auth:pipeline_factory
+      noauth: cors faultwrap http_proxy_to_wsgi sizelimit noauth api
+      keystone: cors faultwrap http_proxy_to_wsgi sizelimit authtoken keystonecontext api
+      keystone_nolimit: cors faultwrap http_proxy_to_wsgi sizelimit authtoken keystonecontext api
+    composite:openstack_share_api_v2:
+      use: call:manila.api.middleware.auth:pipeline_factory
+      noauth: cors faultwrap http_proxy_to_wsgi sizelimit noauth apiv2
+      keystone: cors faultwrap http_proxy_to_wsgi sizelimit authtoken keystonecontext apiv2
+      keystone_nolimit: cors faultwrap http_proxy_to_wsgi sizelimit authtoken keystonecontext apiv2
+    filter:faultwrap:
+      paste.filter_factory: manila.api.middleware.fault:FaultWrapper.factory
+    filter:noauth:
+      paste.filter_factory: manila.api.middleware.auth:NoAuthMiddleware.factory
+    filter:sizelimit:
+      paste.filter_factory: oslo_middleware.sizelimit:RequestBodySizeLimiter.factory
+    filter:http_proxy_to_wsgi:
+      paste.filter_factory: oslo_middleware.http_proxy_to_wsgi:HTTPProxyToWSGI.factory
+    app:api:
+      paste.app_factory: manila.api.v1.router:APIRouter.factory
+    app:apiv2:
+      paste.app_factory: manila.api.v2.router:APIRouter.factory
+    pipeline:apiversions:
+      pipeline: cors faultwrap http_proxy_to_wsgi osshareversionapp
+    app:osshareversionapp:
+      paste.app_factory: manila.api.versions:VersionsRouter.factory
+    filter:keystonecontext:
+      paste.filter_factory: manila.api.middleware.auth:ManilaKeystoneContext.factory
+    filter:authtoken:
+      paste.filter_factory: keystonemiddleware.auth_token:filter_factory
+    filter:cors:
+      paste.filter_factory: oslo_middleware.cors:filter_factory
+      oslo_config_project: manila
+  policy:
+    context_is_admin: role:admin
+    admin_or_owner: is_admin:True or project_id:%(project_id)s
+    default: rule:admin_or_owner
+    admin_api: is_admin:True
+    availability_zone:index: rule:default
+    quota_set:update: rule:admin_api
+    quota_set:show: rule:default
+    quota_set:delete: rule:admin_api
+    quota_class_set:show: rule:default
+    quota_class_set:update: rule:admin_api
+    service:index: rule:admin_api
+    service:update: rule:admin_api
+    share:create:
+    share:delete: rule:default
+    share:get: rule:default
+    share:get_all: rule:default
+    share:list_by_share_server_id: rule:admin_api
+    share:list_by_host: rule:admin_api
+    share:update: rule:default
+    share:access_get: rule:default
+    share:access_get_all: rule:default
+    share:allow_access: rule:default
+    share:deny_access: rule:default
+    share:extend: rule:default
+    share:shrink: rule:default
+    share:get_share_metadata: rule:default
+    share:delete_share_metadata: rule:default
+    share:update_share_metadata: rule:default
+    share:migration_start: rule:admin_api
+    share:migration_complete: rule:admin_api
+    share:migration_cancel: rule:admin_api
+    share:migration_get_progress: rule:admin_api
+    share:reset_task_state: rule:admin_api
+    share:manage: rule:admin_api
+    share:unmanage: rule:admin_api
+    share:force_delete: rule:admin_api
+    share:reset_status: rule:admin_api
+    share:revert_to_snapshot: rule:default
+    share_export_location:index: rule:default
+    share_export_location:show: rule:default
+    share_instance:index: rule:admin_api
+    share_instance:show: rule:admin_api
+    share_instance:force_delete: rule:admin_api
+    share_instance:reset_status: rule:admin_api
+    share_instance_export_location:index: rule:admin_api
+    share_instance_export_location:show: rule:admin_api
+    share:create_snapshot: rule:default
+    share:delete_snapshot: rule:default
+    share:snapshot_update: rule:default
+    share_snapshot:get_snapshot: rule:default
+    share_snapshot:get_all_snapshots: rule:default
+    share_snapshot:manage_snapshot: rule:admin_api
+    share_snapshot:unmanage_snapshot: rule:admin_api
+    share_snapshot:force_delete: rule:admin_api
+    share_snapshot:reset_status: rule:admin_api
+    share_snapshot:access_list: rule:default
+    share_snapshot:allow_access: rule:default
+    share_snapshot:deny_access: rule:default
+    share_snapshot_export_location:index: rule:default
+    share_snapshot_export_location:show: rule:default
+    share_snapshot_instance:detail: rule:admin_api
+    share_snapshot_instance:index: rule:admin_api
+    share_snapshot_instance:show: rule:admin_api
+    share_snapshot_instance:reset_status: rule:admin_api
+    share_snapshot_instance_export_location:index: rule:admin_api
+    share_snapshot_instance_export_location:show: rule:admin_api
+    share_type:index: rule:default
+    share_type:show: rule:default
+    share_type:default: rule:default
+    share_type:create: rule:admin_api
+    share_type:delete: rule:admin_api
+    share_type:add_project_access: rule:admin_api
+    share_type:list_project_access: rule:admin_api
+    share_type:remove_project_access: rule:admin_api
+    share_types_extra_spec:create: rule:admin_api
+    share_types_extra_spec:update: rule:admin_api
+    share_types_extra_spec:show: rule:admin_api
+    share_types_extra_spec:index: rule:admin_api
+    share_types_extra_spec:delete: rule:admin_api
+    security_service:create: rule:default
+    security_service:delete: rule:default
+    security_service:update: rule:default
+    security_service:show: rule:default
+    security_service:index: rule:default
+    security_service:detail: rule:default
+    security_service:get_all_security_services: rule:admin_api
+    share_server:index: rule:admin_api
+    share_server:show: rule:admin_api
+    share_server:details: rule:admin_api
+    share_server:delete: rule:admin_api
+    share_network:create: rule:default
+    share_network:delete: rule:default
+    share_network:update: rule:default
+    share_network:index: rule:default
+    share_network:detail: rule:default
+    share_network:show: rule:default
+    share_network:add_security_service: rule:default
+    share_network:remove_security_service: rule:default
+    share_network:get_all_share_networks: rule:admin_api
+    scheduler_stats:pools:index: rule:admin_api
+    scheduler_stats:pools:detail: rule:admin_api
+    share_group:create : rule:default
+    share_group:delete: rule:default
+    share_group:update: rule:default
+    share_group:get: rule:default
+    share_group:get_all: rule:default
+    share_group:force_delete: rule:admin_api
+    share_group:reset_status: rule:admin_api
+    share_group_snapshot:create : rule:default
+    share_group_snapshot:delete: rule:default
+    share_group_snapshot:update : rule:default
+    share_group_snapshot:get: rule:default
+    share_group_snapshot:get_all: rule:default
+    share_group_snapshot:force_delete: rule:admin_api
+    share_group_snapshot:reset_status: rule:admin_api
+    share_replica:get_all: rule:default
+    share_replica:show: rule:default
+    share_replica:create : rule:default
+    share_replica:delete: rule:default
+    share_replica:promote: rule:default
+    share_replica:resync: rule:admin_api
+    share_replica:reset_status: rule:admin_api
+    share_replica:force_delete: rule:admin_api
+    share_replica:reset_replica_state: rule:admin_api
+    share_group_type:index: rule:default
+    share_group_type:show: rule:default
+    share_group_type:default: rule:default
+    share_group_type:create: rule:admin_api
+    share_group_type:delete: rule:admin_api
+    share_group_type:add_project_access: rule:admin_api
+    share_group_type:list_project_access: rule:admin_api
+    share_group_type:remove_project_access: rule:admin_api
+    share_group_types_spec:create: rule:admin_api
+    share_group_types_spec:update: rule:admin_api
+    share_group_types_spec:show: rule:admin_api
+    share_group_types_spec:index: rule:admin_api
+    share_group_types_spec:delete: rule:admin_api
+    message:delete: rule:default
+    message:get: rule:default
+    message:get_all: rule:default
+  manila_sudoers: |
+    # This sudoers file supports rootwrap for both Kolla and LOCI Images.
+    Defaults !requiretty
+    Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/var/lib/openstack/bin:/var/lib/kolla/venv/bin"
+    manila ALL = (root) NOPASSWD: /var/lib/kolla/venv/bin/manila-rootwrap /etc/manila/rootwrap.conf *, /var/lib/openstack/bin/manila-rootwrap /etc/manila/rootwrap.conf *
+  rootwrap: |
+    # Configuration for manila-rootwrap
+    # This file should be owned by (and only-writeable by) the root user
+
+    [DEFAULT]
+    # List of directories to load filter definitions from (separated by ',').
+    # These directories MUST all be only writeable by root !
+    filters_path=/etc/manila/rootwrap.d
+
+    # List of directories to search executables in, in case filters do not
+    # explicitely specify a full path (separated by ',')
+    # If not specified, defaults to system PATH environment variable.
+    # These directories MUST all be only writeable by root !
+    exec_dirs=/sbin,/usr/sbin,/bin,/usr/bin,/usr/local/bin,/usr/local/sbin,/var/lib/openstack/bin,/var/lib/kolla/venv/bin
+
+    # Enable logging to syslog
+    # Default value is False
+    use_syslog=False
+
+    # Which syslog facility to use.
+    # Valid values include auth, authpriv, syslog, local0, local1...
+    # Default value is 'syslog'
+    syslog_log_facility=syslog
+
+    # Which messages to log.
+    # INFO means log all usage
+    # ERROR means only log unsuccessful attempts
+    syslog_log_level=ERROR
+  rootwrap_filters:
+    share:
+      pods:
+        - share
+      content: |
+        # manila-rootwrap command filters for share nodes
+        # This file should be owned by (and only-writeable by) the root user
+        [Filters]
+        # manila/utils.py : 'chown', '%s', '%s'
+        chown: CommandFilter, chown, root
+        # manila/utils.py : 'cat', '%s'
+        cat: CommandFilter, cat, root
+
+        # manila/share/drivers/lvm.py: 'mkfs.ext4', '/dev/mapper/%s'
+        mkfs.ext4: CommandFilter, mkfs.ext4, root
+
+        # manila/share/drivers/lvm.py: 'mkfs.ext3', '/dev/mapper/%s'
+        mkfs.ext3: CommandFilter, mkfs.ext3, root
+
+        # manila/share/drivers/lvm.py: 'smbd', '-s', '%s', '-D'
+        smbd: CommandFilter, smbd, root
+        smb: CommandFilter, smb, root
+
+        # manila/share/drivers/lvm.py: 'rmdir', '%s'
+        rmdir: CommandFilter, rmdir, root
+
+        # manila/share/drivers/lvm.py: 'dd' 'count=0', 'if=%s' % srcstr, 'of=%s'
+        dd: CommandFilter, dd, root
+
+        # manila/share/drivers/lvm.py: 'fsck', '-pf', %s
+        fsck: CommandFilter, fsck, root
+
+        # manila/share/drivers/lvm.py: 'resize2fs', %s
+        resize2fs: CommandFilter, resize2fs, root
+
+        # manila/share/drivers/helpers.py: 'smbcontrol', 'all', 'close-share', '%s'
+        smbcontrol: CommandFilter, smbcontrol, root
+
+        # manila/share/drivers/helpers.py: 'net', 'conf', 'addshare', '%s', '%s', 'writeable=y', 'guest_ok=y
+        # manila/share/drivers/helpers.py: 'net', 'conf', 'delshare', '%s'
+        # manila/share/drivers/helpers.py: 'net', 'conf', 'setparm', '%s', '%s', '%s'
+        # manila/share/drivers/helpers.py: 'net', 'conf', 'getparm', '%s', 'hosts allow'
+        net: CommandFilter, net, root
+
+        # manila/share/drivers/helpers.py: 'cp', '%s', '%s'
+        cp: CommandFilter, cp, root
+
+        # manila/share/drivers/helpers.py: 'service', '%s', '%s'
+        service: CommandFilter, service, root
+
+        # manila/share/drivers/lvm.py: 'lvremove', '-f', "%s/%s
+        lvremove: CommandFilter, lvremove, root
+
+        # manila/share/drivers/lvm.py: 'lvextend', '-L', '%sG''-n', %s
+        lvextend: CommandFilter, lvextend, root
+
+        # manila/share/drivers/lvm.py: 'lvcreate', '-L', %s, '-n', %s
+        lvcreate: CommandFilter, lvcreate, root
+
+        # manila/share/drivers/lvm.py: 'vgs', '--noheadings', '-o', 'name'
+        # manila/share/drivers/lvm.py: 'vgs', %s, '--rows', '--units', 'g'
+        vgs: CommandFilter, vgs, root
+
+        # manila/share/drivers/lvm.py: 'tune2fs', '-U', 'random', '%volume-snapshot%'
+        tune2fs: CommandFilter, tune2fs, root
+
+        # manila/share/drivers/glusterfs.py: 'mkdir', '%s'
+        # manila/share/drivers/ganesha/manager.py: 'mkdir', '-p', '%s'
+        mkdir: CommandFilter, mkdir, root
+
+        # manila/share/drivers/glusterfs.py: 'rm', '-rf', '%s'
+        rm: CommandFilter, rm, root
+
+        # manila/share/drivers/glusterfs.py: 'mount', '-t', 'glusterfs', '%s', '%s'
+        # manila/share/drivers/glusterfs/glusterfs_native.py: 'mount', '-t', 'glusterfs', '%s', '%s'
+        mount: CommandFilter, mount, root
+
+        # manila/share/drivers/glusterfs.py: 'gluster', '--xml', 'volume', 'info', '%s'
+        # manila/share/drivers/glusterfs.py: 'gluster', 'volume', 'set', '%s', 'nfs.export-dir', '%s'
+        gluster: CommandFilter, gluster, root
+
+        # manila/network/linux/ip_lib.py: 'ip', 'netns', 'exec', '%s', '%s'
+        ip: CommandFilter, ip, root
+
+        # manila/network/linux/interface.py: 'ovs-vsctl', 'add-port', '%s', '%s'
+        ovs-vsctl: CommandFilter, ovs-vsctl, root
+
+        # manila/share/drivers/glusterfs/glusterfs_native.py: 'find', '%s', '-mindepth', '1', '!', '-path', '%s', '!', '-path', '%s', '-delete'
+        # manila/share/drivers/glusterfs/glusterfs_native.py: 'find', '%s', '-mindepth', '1', '-delete'
+        find: CommandFilter, find, root
+
+        # manila/share/drivers/glusterfs/glusterfs_native.py: 'umount', '%s'
+        umount: CommandFilter, umount, root
+
+        # GPFS commands
+        # manila/share/drivers/ibm/gpfs.py: 'mmgetstate', '-Y'
+        mmgetstate: CommandFilter, mmgetstate, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmlsattr', '%s'
+        mmlsattr: CommandFilter, mmlsattr, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmcrfileset', '%s', '%s', '--inode-space', 'new'
+        mmcrfileset: CommandFilter, mmcrfileset, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmlinkfileset', '%s', '%s', '-J', '%s'
+        mmlinkfileset: CommandFilter, mmlinkfileset, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmsetquota', '-j', '%s', '-h', '%s', '%s'
+        mmsetquota: CommandFilter, mmsetquota, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmunlinkfileset', '%s', '%s', '-f'
+        mmunlinkfileset: CommandFilter, mmunlinkfileset, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmdelfileset', '%s', '%s', '-f'
+        mmdelfileset: CommandFilter, mmdelfileset, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmcrsnapshot', '%s', '%s', '-j', '%s'
+        mmcrsnapshot: CommandFilter, mmcrsnapshot, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmdelsnapshot', '%s', '%s', '-j', '%s'
+        mmdelsnapshot: CommandFilter, mmdelsnapshot, root
+        # manila/share/drivers/ibm/gpfs.py: 'rsync', '-rp', '%s', '%s'
+        rsync: CommandFilter, rsync, root
+        # manila/share/drivers/ibm/gpfs.py: 'exportfs'
+        exportfs: CommandFilter, exportfs, root
+        # manila/share/drivers/ibm/gpfs.py: 'stat', '--format=%F', '%s'
+        stat: CommandFilter, stat, root
+        # manila/share/drivers/ibm/gpfs.py: 'df', '-P', '-B', '1', '%s'
+        df: CommandFilter, df, root
+        # manila/share/drivers/ibm/gpfs.py: 'chmod', '777', '%s'
+        chmod: CommandFilter, chmod, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmnfs', 'export', '%s', '%s'
+        mmnfs: CommandFilter, mmnfs, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmlsfileset', '%s', '-J', '%s', '-L'
+        mmlsfileset: CommandFilter, mmlsfileset, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmchfileset', '%s', '-J', '%s', '-j', '%s'
+        mmchfileset: CommandFilter, mmchfileset, root
+        # manila/share/drivers/ibm/gpfs.py: 'mmlsquota', '-j', '-J', '%s', '%s'
+        mmlsquota: CommandFilter, mmlsquota, root
+
+        # manila/share/drivers/ganesha/manager.py: 'mv', '%s', '%s'
+        mv: CommandFilter, mv, root
+
+        # manila/share/drivers/ganesha/manager.py: 'mktemp', '-p', '%s', '-t', '%s'
+        mktemp: CommandFilter, mktemp, root
+
+        # manila/share/drivers/ganesha/manager.py:
+        shcat: RegExpFilter, sh, root, sh, -c, echo '((.|\n)*)' > /.*
+
+        # manila/share/drivers/ganesha/manager.py:
+        dbus-addexport: RegExpFilter, dbus-send, root, dbus-send, --print-reply, --system, --dest=org\.ganesha\.nfsd, /org/ganesha/nfsd/ExportMgr, org\.ganesha\.nfsd\.exportmgr\.(Add|Remove)Export, .*, .*
+
+        # manila/share/drivers/ganesha/manager.py:
+        dbus-removeexport: RegExpFilter, dbus-send, root, dbus-send, --print-reply, --system, --dest=org\.ganesha\.nfsd, /org/ganesha/nfsd/ExportMgr, org\.ganesha\.nfsd\.exportmgr\.(Add|Remove)Export, .*
+
+        # manila/share/drivers/ganesha/manager.py:
+        dbus-updateexport: RegExpFilter, dbus-send, root, dbus-send, --print-reply, --system, --dest=org\.ganesha\.nfsd, /org/ganesha/nfsd/ExportMgr, org\.ganesha\.nfsd\.exportmgr\.UpdateExport, .*, .*
+
+        # manila/share/drivers/ganesha/manager.py:
+        rmconf: RegExpFilter, sh, root, sh, -c, rm -f /.*/\*\.conf$
+
+        # ZFS commands
+        # manila/share/drivers/zfsonlinux/driver.py
+        # manila/share/drivers/zfsonlinux/utils.py
+        zpool: CommandFilter, zpool, root
+
+        # manila/share/drivers/zfsonlinux/driver.py
+        # manila/share/drivers/zfsonlinux/utils.py
+        zfs: CommandFilter, zfs, root
+
+        # manila/share/drivers/zfsonlinux/driver.py
+        kill: CommandFilter, kill, root
+
+        # manila/data/utils.py: 'ls', '-pA1', '--group-directories-first', '%s'
+        ls: CommandFilter, ls, root
+
+        # manila/data/utils.py: 'touch', '--reference=%s', '%s'
+        touch: CommandFilter, touch, root
+
+        # manila/share/drivers/container/container.py: docker <whatever>
+        docker: CommandFilter, docker, root
+
+        # manila/share/drivers/container/container.py: brctl <whatever>
+        brctl: CommandFilter, brctl, root
+
+        # manila/share/drivers/container/container.py: e2fsck <whatever>
+        e2fsck: CommandFilter, e2fsck, root
+
+        # manila/share/drivers/lvm.py: lvconvert --merge %s
+        lvconvert: CommandFilter, lvconvert, root
+
+        # manila/data/utils.py: 'sha256sum', '%s'
+        sha256sum: CommandFilter, sha256sum, root
+  ceph:
+    override:
+    append:
+    monitors: []
+    admin_keyring: null
+    # XXX: pools?
+  manila:
+    DEFAULT:
+      log_config_append: /etc/manila/logging.conf
+      use_syslog: false
+      use_stderr: true
+      default_share_type: cephfs1
+      share_name_template: "share-%s"
+      # NOTE(portdirect): the bind port should not be defined, and is manipulated
+      # via the endpoints section.
+      osapi_share_listen_port: null
+      enabled_share_protocols: "CEPHFS"
+      enabled_share_backends: "cephfs1"
+    database:
+      max_retries: -1
+    keystone_authtoken:
+      auth_version: v3
+      auth_type: password
+      memcache_security_strategy: ENCRYPT
+    oslo_concurrency:
+      lock_path: "/var/lib/manila/tmp" # XXX:
+    oslo_messaging_notifications:
+      driver: messagingv2
+    oslo_middleware:
+      enable_proxy_headers_parsing: true
+  logging:
+    loggers:
+      keys:
+        - root
+        - manila
+    handlers:
+      keys:
+        - stdout
+        - stderr
+        - "null"
+    formatters:
+      keys:
+        - context
+        - default
+    logger_root:
+      level: WARNING
+      handlers: 'null'
+    logger_manila:
+      level: INFO
+      handlers:
+        - stdout
+      qualname: manila
+    logger_amqp:
+      level: WARNING
+      handlers: stderr
+      qualname: amqp
+    logger_amqplib:
+      level: WARNING
+      handlers: stderr
+      qualname: amqplib
+    logger_eventletwsgi:
+      level: WARNING
+      handlers: stderr
+      qualname: eventlet.wsgi.server
+    logger_sqlalchemy:
+      level: WARNING
+      handlers: stderr
+      qualname: sqlalchemy
+    logger_boto:
+      level: WARNING
+      handlers: stderr
+      qualname: boto
+    handler_null:
+      class: logging.NullHandler
+      formatter: default
+      args: ()
+    handler_stdout:
+      class: StreamHandler
+      args: (sys.stdout,)
+      formatter: context
+    handler_stderr:
+      class: StreamHandler
+      args: (sys.stderr,)
+      formatter: context
+    formatter_context:
+      class: oslo_log.formatters.ContextFormatter
+      datefmt: "%Y-%m-%d %H:%M:%S"
+    formatter_default:
+      format: "%(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
+  rabbitmq:
+    #NOTE(rk760n): adding rmq policy to mirror messages from notification queues and set expiration time for the ones
+    policies:
+      - vhost: "manila"
+        name: "ha_ttl_manila"
+        definition:
+          #mirror messges to other nodes in rmq cluster
+          ha-mode: "all"
+          ha-sync-mode: "automatic"
+          #70s
+          message-ttl: 70000
+        priority: 0
+        apply-to: all
+        pattern: '(notifications)\.'
+
+  backends:
+    # Those options will be written to backends.conf as-is.
+    cephfs1:
+      driver_handles_share_servers: False
+      share_backend_name: CEPHFS1
+      share_driver: manila.share.drivers.cephfs.driver.CephFSDriver
+      cephfs_conf_path: /etc/ceph/ceph.conf
+      cephfs_auth_id: manila
+      cephfs_cluster_name: ceph
+      cephfs_enable_snapshots: True
+  rally_tests: # XXX: check
+    run_tempest: false
+    tests:
+      ManilaShares.create_and_delete_share:
+        - args:
+            share_proto: "cephfs"
+            size: 1
+            new_size: 2
+            share_type: "cephfs1"
+          runner:
+            concurrency: 1
+            times: 1
+            type: constant
+          sla:
+            failure_rate:
+              max: 0
+
+dependencies:
+  dynamic:
+    common:
+      local_image_registry:
+        jobs:
+          - manila-image-repo-sync
+        services:
+          - endpoint: node
+            service: local_image_registry
+  static:
+    api:
+      jobs:
+        - manila-db-sync
+        - manila-ks-user
+        - manila-ks-endpoints
+        - manila-rabbit-init
+        - manila-storage-init
+      services:
+        - endpoint: internal
+          service: oslo_db
+        - endpoint: internal
+          service: identity
+    bootstrap:
+      services:
+        - endpoint: internal
+          service: identity
+        - endpoint: internal
+          service: share
+    clean:
+      jobs: null
+    db_drop:
+      services:
+        - endpoint: internal
+          service: oslo_db
+    db_init:
+      services:
+        - endpoint: internal
+          service: oslo_db
+    db_sync:
+      jobs:
+        - manila-db-init
+      services:
+        - endpoint: internal
+          service: oslo_db
+    ks_endpoints:
+      jobs:
+        - manila-ks-service
+      services:
+        - endpoint: internal
+          service: identity
+    ks_service:
+      services:
+        - endpoint: internal
+          service: identity
+    ks_user:
+      services:
+        - endpoint: internal
+          service: identity
+    rabbit_init:
+      services:
+        - service: oslo_messaging
+          endpoint: internal
+    scheduler:
+      jobs:
+        - manila-db-sync
+        - manila-ks-user
+        - manila-ks-endpoints
+        - manila-rabbit-init
+        - manila-storage-init
+      services:
+        - endpoint: internal
+          service: identity
+        - endpoint: internal
+          service: share
+    storage_init:
+      jobs: null
+    tests:
+      services:
+        - endpoint: internal
+          service: identity
+        - endpoint: internal
+          service: share
+    share:
+      jobs:
+        - manila-db-sync
+        - manila-ks-user
+        - manila-ks-endpoints
+        - manila-rabbit-init
+        - manila-storage-init
+      services:
+        - endpoint: internal
+          service: identity
+        - endpoint: internal
+          service: share
+
+# Names of secrets used by bootstrap and environmental checks
+secrets:
+  identity:
+    admin: manila-keystone-admin
+    manila: manila-keystone-user
+    test: manila-keystone-test
+  oslo_db:
+    admin: manila-db-admin
+    manila: manila-db-user
+  cephfs:
+    share: manila-share-cephfs-keyring
+  oslo_messaging:
+    admin: manila-rabbitmq-admin
+    manila: manila-rabbitmq-user
+  tls:
+    share:
+      api:
+        public: manila-tls-public
+
+# We use a different layout of the endpoints here to account for versioning
+# this swaps the service name and type, and should be rolled out to other
+# services.
+endpoints:
+  cluster_domain_suffix: cluster.local
+  local_image_registry:
+    name: docker-registry
+    namespace: docker-registry
+    hosts:
+      default: localhost
+      internal: docker-registry
+      node: localhost
+    host_fqdn_override:
+      default: null
+    port:
+      registry:
+        node: 5000
+  identity:
+    name: keystone
+    auth:
+      admin:
+        region_name: RegionOne
+        username: admin
+        password: password
+        project_name: admin
+        user_domain_name: default
+        project_domain_name: default
+      manila:
+        role: admin
+        region_name: RegionOne
+        username: manila
+        password: password
+        project_name: service
+        user_domain_name: service
+        project_domain_name: service
+      test:
+        role: admin
+        region_name: RegionOne
+        username: test
+        password: password
+        project_name: test
+        user_domain_name: service
+        project_domain_name: service
+    hosts:
+      default: keystone
+      internal: keystone-api
+    host_fqdn_override:
+      default: null
+    path:
+      default: /v3
+    scheme:
+      default: http
+    port:
+      api:
+        default: 80
+        internal: 5000
+  image:
+    name: glance
+    hosts:
+      default: glance-api
+      public: glance
+    host_fqdn_override:
+      default: null
+    path:
+      default: null
+    scheme:
+      default: http
+    port:
+      api:
+        default: 9292
+        public: 80
+  image_registry:
+    name: glance-registry
+    hosts:
+      default: glance-registry
+      public: glance-reg
+    host_fqdn_override:
+      default: null
+    path:
+      default: null
+    scheme:
+      default: 'http'
+    port:
+      api:
+        default: 9191
+        public: 80
+  share:
+    name: manila
+    hosts:
+      default: manila-api
+      public: manila
+    host_fqdn_override:
+      default: null
+      # NOTE(portdirect): this chart supports TLS for fqdn over-ridden public
+      # endpoints using the following format:
+      # public:
+      #   host: null
+      #   tls:
+      #     crt: null
+      #     key: null
+    path:
+      default: '/v1/%(tenant_id)s'
+    scheme:
+      default: 'http'
+    port:
+      api:
+        default: 8786 # XXX:
+        public: 80
+  sharev2:
+    name: manilav2
+    hosts:
+      default: manila-api
+      public: manila
+    host_fqdn_override:
+      default: null
+      # NOTE(portdirect): this chart supports TLS for fqdn over-ridden public
+      # endpoints using the following format:
+      # public:
+      #   host: null
+      #   tls:
+      #     crt: null
+      #     key: null
+    path:
+      default: '/v2/%(tenant_id)s'
+    scheme:
+      default: 'http'
+    port:
+      api:
+        default: 8786
+        public: 80
+  oslo_db:
+    auth:
+      admin:
+        username: root
+        password: password
+      manila:
+        username: manila
+        password: password
+    hosts:
+      default: mariadb
+    host_fqdn_override:
+      default: null
+    path: /manila
+    scheme: mysql+pymysql
+    port:
+      mysql:
+        default: 3306
+  oslo_messaging:
+    auth:
+      admin:
+        username: rabbitmq
+        password: password
+      manila:
+        username: manila
+        password: password
+    hosts:
+      default: rabbitmq
+    host_fqdn_override:
+      default: null
+    path: /manila
+    scheme: rabbit
+    port:
+      amqp:
+        default: 5672
+      http:
+        default: 15672
+  oslo_cache:
+    auth:
+      # NOTE(portdirect): this is used to define the value for keystone
+      # authtoken cache encryption key, if not set it will be populated
+      # automatically with a random value, but to take advantage of
+      # this feature all services should be set to use the same key,
+      # and memcache service.
+      memcache_secret_key: null
+    hosts:
+      default: memcached
+    host_fqdn_override:
+      default: null
+    port:
+      memcache:
+        default: 11211
+  fluentd:
+    namespace: null
+    name: fluentd
+    hosts:
+      default: fluentd-logging
+    host_fqdn_override:
+      default: null
+    path:
+      default: null
+    scheme: 'http'
+    port:
+      service:
+        default: 24224
+      metrics:
+        default: 24220
+  #NOTE(tp6510): these endpoints allow for things like DNS lookups and apiserver access.
+  # They are using to enable the Egress K8s network policy.
+  k8s:
+    port:
+      api:
+        default: 6443
+        internal: 5000
+  default:
+    namespace: default
+  kube_system:
+    namespace: kube-system
+  kube_public:
+    namespace: kube-public
+
+network_policy:
+  manila:
+    ingress:
+      - {}
+    egress:
+      - {}
+
+manifests:
+  configmap_bin: true
+  configmap_etc: true
+  deployment_api: true
+  deployment_scheduler: true
+  deployment_share: true
+  ingress_api: true
+  job_bootstrap: true
+  job_clean: true
+  job_db_init: true
+  job_image_repo_sync: true
+  job_rabbit_init: true
+  job_db_sync: true
+  job_db_drop: false
+  job_ks_endpoints: true
+  job_ks_service: true
+  job_ks_user: true
+  job_storage_init: true
+  pdb_api: true
+  pod_rally_test: true
+  network_policy: false
+  secret_db: true
+  secret_ingress_tls: true
+  secret_keystone: true
+  secret_rabbitmq: true
+  service_api: true
+  service_ingress_api: true
