@@ -1,8 +1,4 @@
-#!/bin/bash
-
 {{/*
-Copyright 2017 The Openstack-Helm Authors.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,17 +12,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */}}
 
-set -ex
-{{ dict "envAll" . "objectType" "script_sh" "secretPrefix" "manila" | include "helm-toolkit.snippets.kubernetes_ssl_objects" }}
-COMMAND="${@:-start}"
+{{/*
+abstract: |
+  Resolves the service name for an service type
+values: |
+  endpoints:
+    identity:
+      name: keystone
+usage: |
+  {{ tuple identity . | include "keystone_endpoint_name_lookup" }}
+return: |
+  "keystone"
+*/}}
 
-function start () {
-  exec manila-api \
-        --config-file /etc/manila/manila.conf
-}
-
-function stop () {
-  kill -TERM 1
-}
-
-$COMMAND
+{{- define "helm-toolkit.endpoints.keystone_endpoint_name_lookup" -}}
+{{- $type := index . 0 -}}
+{{- $context := index . 1 -}}
+{{- $endpointMap := index $context.Values.endpoints ( $type | replace "-" "_" ) }}
+{{- $endpointName := index $endpointMap "name" }}
+{{- $endpointName | quote -}}
+{{- end -}}

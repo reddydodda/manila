@@ -35,11 +35,11 @@ data:
 {{ tuple "bin/_db-sync.sh.tpl" . | include "helm-toolkit.utils.template" | indent 4 }}
   db-drop.py: |
 {{- include "helm-toolkit.scripts.db_drop" . | indent 4 }}
-  ks-service.sh: |
+  ks-service.py: |
 {{- include "helm-toolkit.scripts.keystone_service" . | indent 4 }}
-  ks-endpoints.sh: |
+  ks-endpoints.py: |
 {{- include "helm-toolkit.scripts.keystone_endpoints" . | indent 4 }}
-  ks-user.sh: |
+  ks-user.py: |
 {{- include "helm-toolkit.scripts.keystone_user" . | indent 4 }}
   manila-api.sh: |
 {{ tuple "bin/_manila-api.sh.tpl" . | include "helm-toolkit.utils.template" | indent 4 }}

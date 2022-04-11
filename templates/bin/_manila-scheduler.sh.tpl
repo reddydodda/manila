@@ -17,5 +17,6 @@ limitations under the License.
 */}}
 
 set -ex
+{{ dict "envAll" . "objectType" "script_sh" "secretPrefix" "manila" | include "helm-toolkit.snippets.kubernetes_ssl_objects" }}
 exec manila-scheduler \
       --config-file /etc/manila/manila.conf

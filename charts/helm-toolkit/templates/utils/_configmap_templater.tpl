@@ -1,8 +1,4 @@
-#!/bin/bash
-
 {{/*
-Copyright 2017 The Openstack-Helm Authors.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,17 +12,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */}}
 
-set -ex
-{{ dict "envAll" . "objectType" "script_sh" "secretPrefix" "manila" | include "helm-toolkit.snippets.kubernetes_ssl_objects" }}
-COMMAND="${@:-start}"
-
-function start () {
-  exec manila-api \
-        --config-file /etc/manila/manila.conf
-}
-
-function stop () {
-  kill -TERM 1
-}
-
-$COMMAND
+{{- define "helm-toolkit.utils.configmap_templater" }}
+{{- $keyRoot := index . 0 -}}
+{{- $configTemplate := index . 1 -}}
+{{- $context := index . 2 -}}
+{{ if $keyRoot.override -}}
+{{ $keyRoot.override | indent 4 }}
+{{- else -}}
+{{- if $keyRoot.prefix -}}
+{{ $keyRoot.prefix | indent 4 }}
+{{- end }}
+{{ tuple $configTemplate $context | include "helm-toolkit.utils.template" | indent 4 }}
+{{- end }}
+{{- if $keyRoot.append -}}
+{{ $keyRoot.append | indent 4 }}
+{{- end }}
+{{- end -}}

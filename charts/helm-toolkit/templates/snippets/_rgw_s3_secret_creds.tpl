@@ -1,8 +1,4 @@
-#!/bin/bash
-
 {{/*
-Copyright 2017 The Openstack-Helm Authors.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,17 +12,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */}}
 
-set -ex
-{{ dict "envAll" . "objectType" "script_sh" "secretPrefix" "manila" | include "helm-toolkit.snippets.kubernetes_ssl_objects" }}
-COMMAND="${@:-start}"
-
-function start () {
-  exec manila-api \
-        --config-file /etc/manila/manila.conf
-}
-
-function stop () {
-  kill -TERM 1
-}
-
-$COMMAND
+{{- define "helm-toolkit.snippets.rgw_s3_secret_creds" }}
+{{- $userClass := index . 0 -}}
+{{- $context := index . 1 -}}
+{{- $userContext := index $context.Values.endpoints.ceph_object_store.auth $userClass }}
+S3_USERNAME: {{ $userContext.username | b64enc }}
+S3_ACCESS_KEY: {{ $userContext.access_key | b64enc }}
+S3_SECRET_KEY: {{ $userContext.secret_key | b64enc }}
+{{- end }}

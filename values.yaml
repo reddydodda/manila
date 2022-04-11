@@ -1103,6 +1103,8 @@ network_policy:
       - {}
 
 manifests:
+  secret_ca_bundle: false
+  certificates: false
   configmap_bin: true
   configmap_etc: true
   deployment_api: true
