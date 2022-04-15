@@ -24,10 +24,10 @@ export HOME=/tmp
   {{- /* Create share types defined in Values.bootstrap */}}
   {{- range $name, $properties := .Values.bootstrap.share_types }}
     {{- if $properties.share_backend_name }}
-manila type-create {{ $name }} \
+manila --endpoint-type internal type-create {{ $name }} \
   {{ $properties.driver_handles_share_servers }}
 
-manila type-key {{ $name }} \
+manila --endpoint-type internal type-key {{ $name }} \
   set share_backend_name={{ $properties.share_backend_name}}
     {{- end }}
   {{- end }}
@@ -36,10 +36,10 @@ manila type-key {{ $name }} \
   {{- if .Values.bootstrap.bootstrap_conf_backends }}
     {{- range $name, $properties := .Values.conf.backends }}
       {{- if $properties }}
-manila type-create {{ $name }} \
+manila --endpoint-type internal type-create {{ $name }} \
   {{ $properties.driver_handles_share_servers }}
 
-manila type-key {{ $name }} \
+manila --endpoint-type internal type-key {{ $name }} \
   set share_backend_name={{ $properties.share_backend_name}}
 
       {{- end }}
@@ -47,7 +47,7 @@ manila type-key {{ $name }} \
   {{- end }}
 
 {{- /* Check share type and properties were added */}}
-manila type-list
+manila --endpoint-type internal type-list
 
 {{- end }}
 

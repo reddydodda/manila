@@ -219,7 +219,7 @@ bootstrap:
   bootstrap_conf_backends: true
   share_types:
     name:
-      driver_handles_share_server:
+      driver_handles_share_servers:
       share_backend_name:
 
 network:
@@ -234,7 +234,7 @@ network:
     external_policy_local: false
     node_port:
       enabled: false
-      port: 30877 ### XXX: ????????
+      port: 30877
 
 ceph_client:
   configmap: ceph-etc
@@ -650,13 +650,13 @@ conf:
       log_config_append: /etc/manila/logging.conf
       use_syslog: false
       use_stderr: true
-      default_share_type: cephfs1
-      share_name_template: "share-%s"
+      #default_share_type: cephfs1
+      #share_name_template: "share-%s"
       # NOTE(portdirect): the bind port should not be defined, and is manipulated
       # via the endpoints section.
-      osapi_share_listen_port: null
-      enabled_share_protocols: "CEPHFS"
-      enabled_share_backends: "cephfs1"
+      #osapi_share_listen_port: null
+      #enabled_share_protocols: "CEPHFS"
+      #enabled_share_backends: "cephfs1"
     database:
       max_retries: -1
     keystone_authtoken:
@@ -742,19 +742,19 @@ conf:
           message-ttl: 70000
         priority: 0
         apply-to: all
-        pattern: '(notifications)\.'
+        pattern: '^(?!(amq\.|reply_)).*'
 
   backends:
     # Those options will be written to backends.conf as-is.
-    cephfs1:
-      driver_handles_share_servers: False
-      share_backend_name: CEPHFS1
-      share_driver: manila.share.drivers.cephfs.driver.CephFSDriver
-      cephfs_conf_path: /etc/ceph/ceph.conf
-      cephfs_auth_id: manila
-      cephfs_cluster_name: ceph
-      cephfs_enable_snapshots: True
-  rally_tests: # XXX: check
+    #cephfs1:
+    #  driver_handles_share_servers: False
+    #  share_backend_name: CEPHFS1
+    #  share_driver: manila.share.drivers.cephfs.driver.CephFSDriver
+    #  cephfs_conf_path: /etc/ceph/ceph.conf
+    #  cephfs_auth_id: manila
+    #  cephfs_cluster_name: ceph
+    #  cephfs_enable_snapshots: True
+  rally_tests:
     run_tempest: false
     tests:
       ManilaShares.create_and_delete_share:
@@ -1020,6 +1020,9 @@ endpoints:
       admin:
         username: root
         password: password
+        secret:
+          tls:
+            internal: mariadb-tls-direct
       manila:
         username: manila
         password: password
@@ -1081,13 +1084,36 @@ endpoints:
         default: 24224
       metrics:
         default: 24220
-  #NOTE(tp6510): these endpoints allow for things like DNS lookups and apiserver access.
-  # They are using to enable the Egress K8s network policy.
-  k8s:
+  kube_dns:
+    namespace: kube-system
+    name: kubernetes-dns
+    hosts:
+      default: kube-dns
+    host_fqdn_override:
+      default: null
+    path:
+      default: null
+    scheme: http
     port:
-      api:
-        default: 6443
-        internal: 5000
+      dns:
+        default: 53
+        protocol: UDP
+  ingress:
+    namespace: null
+    name: ingress
+    hosts:
+      default: ingress
+    port:
+      ingress:
+        default: 80
+  etcd:
+    hosts:
+      default: etcd
+    host_fqdn_override:
+      default: null
+    port:
+      etcd:
+        default: 2379
   default:
     namespace: default
   kube_system:
