@@ -443,7 +443,7 @@ conf:
 
     # Enable logging to syslog
     # Default value is False
-    use_syslog=False
+    use_syslog=True
 
     # Which syslog facility to use.
     # Valid values include auth, authpriv, syslog, local0, local1...
@@ -453,7 +453,7 @@ conf:
     # Which messages to log.
     # INFO means log all usage
     # ERROR means only log unsuccessful attempts
-    syslog_log_level=ERROR
+    syslog_log_level=DEBUG
   rootwrap_filters:
     share:
       pods:
@@ -648,7 +648,7 @@ conf:
   manila:
     DEFAULT:
       log_config_append: /etc/manila/logging.conf
-      use_syslog: false
+      use_syslog: true
       use_stderr: true
       #default_share_type: cephfs1
       #share_name_template: "share-%s"
@@ -684,31 +684,31 @@ conf:
         - context
         - default
     logger_root:
-      level: WARNING
+      level: DEBUG
       handlers: 'null'
     logger_manila:
-      level: INFO
+      level: DEBUG
       handlers:
         - stdout
       qualname: manila
     logger_amqp:
-      level: WARNING
+      level: DEBUG
       handlers: stderr
       qualname: amqp
     logger_amqplib:
-      level: WARNING
+      level: DEBUG
       handlers: stderr
       qualname: amqplib
     logger_eventletwsgi:
-      level: WARNING
+      level: DEBUG
       handlers: stderr
       qualname: eventlet.wsgi.server
     logger_sqlalchemy:
-      level: WARNING
+      level: DEBUG
       handlers: stderr
       qualname: sqlalchemy
     logger_boto:
-      level: WARNING
+      level: DEBUG
       handlers: stderr
       qualname: boto
     handler_null:

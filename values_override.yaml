@@ -46,16 +46,16 @@ images:
 bootstrap:
   enabled: true
   ks_user: admin
-  bootstrap_conf_backends: false
+  bootstrap_conf_backends: true
   share_types:
     default_share_type:
-      driver_handles_share_servers: false 
+      driver_handles_share_servers: True
       ## LVM, GENERIC, CEPHFS , NETAPP
-      share_backend_name: LVM
+      share_backend_name: GENERIC
 
 #ceph_client:
-  #configmap: rook-ceph-config
-  #user_secret_name: manila-rbd-keyring
+#  configmap: rook-ceph-config
+#  user_secret_name: rook-csi-cephfs-node
 dependencies:
   static:
     db_init:
@@ -96,6 +96,8 @@ network:
 #    scheduler: 3
 #    share: 3
 conf:
+  #ceph:
+  #  admin_keyring: "AQCPG11iJUQ1FxAAVtFctzIbFWftGqafPVa9kA=="
   manila:
     DEFAULT:
       use_syslog: true
@@ -104,7 +106,7 @@ conf:
       share_name_template: "share-%s"
       osapi_share_listen_port: null
       enabled_share_protocols: "NFS"
-      enabled_share_backends: "lvm"
+      enabled_share_backends: "generic"
       #enabled_share_backends: "generic"
     keystone_authtoken:
       auth_version: v3
@@ -148,29 +150,30 @@ conf:
 
   backends:
     # Those options will be written to backends.conf as-is.
-    lvm:
-      driver_handles_share_servers: False
-      share_backend_name: LVM
-      share_driver: manila.share.drivers.lvm.LVMShareDriver
-      lvm_share_volume_group: manila-volumes
-      lvm_share_export_ips: 172.16.98.200
-    #lvm2:
-    #  driver_handles_share_servers: True
-    #  share_backend_name: GENERIC
-    #  share_driver: manila.share.drivers.generic.GenericShareDriver
-    #  service_instance_flavor_id: 100
-    #  service_image_name: manila-service-image
-    #  service_instance_user: manila
-    #  service_instance_password: manila
-    #  interface_driver: manila.network.linux.interface.BridgeInterfaceDriver
+    #lvm:
+    #  driver_handles_share_servers: False
+    #  share_backend_name: LVM
+    #  share_driver: manila.share.drivers.lvm.LVMShareDriver
+    #  lvm_share_volume_group: manila-volumes
+    #  lvm_share_export_ips: 172.16.98.16,172.16.98.17,172.16.98.18
+    generic:
+      driver_handles_share_servers: True
+      share_backend_name: GENERIC
+      share_driver: manila.share.drivers.generic.GenericShareDriver
+      service_instance_flavor_id: 100
+      service_image_name: manila-service-image
+      service_instance_user: manila
+      service_instance_password: password
+      interface_driver: manila.network.linux.interface.BridgeInterfaceDriver
     #cephfs1:
     #  driver_handles_share_servers: False
     #  share_backend_name: CEPHFS1
     #  share_driver: manila.share.drivers.cephfs.driver.CephFSDriver
     #  cephfs_conf_path: /etc/ceph/ceph.conf
+    #  cephfs_protocol_helper_type: CEPHFS
     #  cephfs_auth_id: manila
     #  cephfs_cluster_name: ceph
-    #  cephfs_enable_snapshots: True
+    #  cephfs_enable_snapshots: False
   rally_tests:
     run_tempest: false
     tests:
@@ -198,7 +201,7 @@ secrets:
     admin: manila-db-admin
     manila: manila-db-user
   cephfs:
-    share: manila-share-cephfs-keyring
+    share: rook-ceph-admin-keyring
   oslo_messaging:
     admin: manila-rabbitmq-admin
     manila: manila-rabbitmq-user
@@ -219,7 +222,7 @@ endpoints:
         default_domain_id: default
         region_name: RegionOne
         username: admin
-        password: CI2BpGJCTQIHiFTCAjiehSbjZXjk1hNf
+        password: ZApbTdk1AMGJcEzXVP55483zAsyk0W0f
         project_name: admin
         user_domain_name: default
         project_domain_name: default
@@ -325,9 +328,9 @@ endpoints:
     port:
       api:
         admin: 8786
-        default: 8786
+        default: 80
         internal: 8786
-        public: 8786
+        public: 443
   sharev2:
     name: manilav2
     hosts:
@@ -422,14 +425,14 @@ endpoints:
     port:
       api:
         admin: 8786
-        default: 8786 
+        default: 80
         internal: 8786
-        public: 8786
+        public: 443
   oslo_db:
     auth:
       admin:
         username: root
-        password: I7fGiPTmBQBaNWVYq6Yy3Pk7iLpbu7ge
+        password: hA0k2c6xaDg3gT064DCFzGIAKll28MW6
       manila:
         username: manila
         password: password
@@ -437,27 +440,41 @@ endpoints:
     auth:
       admin:
         username: rabbitmq
-        password: ndJ2pZjABqHg8VkkuPdClAd4PM7BlejA
+        password: qNu7kNht4wFjPydX9Ye5vk3jFdPqFedq
       user:
-        password: ndJ2pZjABqHg8VkkuPdClAd4PM7BlejA
+        password: qNu7kNht4wFjPydX9Ye5vk3jFdPqFedq
         username: rabbitmq
       manila:
         username: manila
         password: password
     hosts:
       default: rabbitmq
+    host_fqdn_override:
+      default: null
     path: /manila
     scheme: rabbit
     statefulset:
       name: openstack-rabbitmq-rabbitmq
-      replicas: 1
+      replicas: 2
+    port:
+      amqp:
+        default: 5672
+      http:
+        default: 15672
   oslo_cache:
     statefulset:
       name: openstack-memcached-memcached
       replicas: 3
+    hosts:
+      default: memcached
+    host_fqdn_override:
+      default: null
+    port:
+      memcache:
+        default: 11211
   oslo_messaging_notifications:
     auth:
-      cinder:
+      manila:
         password: password
         username: manila
     host_fqdn_override: {}

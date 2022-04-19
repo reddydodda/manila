@@ -64,6 +64,16 @@ limitations under the License.
 {{- $_ := tuple "oslo_messaging" "internal" "manila" "amqp" . | include "helm-toolkit.endpoints.authenticated_endpoint_uri_lookup" | set .Values.conf.manila.DEFAULT "transport_url" -}}
 {{- end -}}
 
+{{- if not (empty .Values.conf.manila.oslo_messaging_notifications) -}}
+{{- if empty .Values.conf.manila.oslo_messaging_notifications.transport_url -}}
+{{- if .Values.endpoints.oslo_messaging_notifications -}}
+{{- $_ := tuple "oslo_messaging_notifications" "internal" "manila" "amqp" . | include "helm-toolkit.endpoints.authenticated_transport_endpoint_uri_lookup" | set .Values.conf.manila.oslo_messaging_notifications "transport_url" -}}
+{{- else -}}
+{{- $_ := tuple "oslo_messaging" "internal" "manila" "amqp" . | include "helm-toolkit.endpoints.authenticated_transport_endpoint_uri_lookup" | set .Values.conf.manila.oslo_messaging_notifications "transport_url" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
 {{- if empty .Values.conf.manila.DEFAULT.osapi_share_listen_port -}}
 {{- $_ := tuple "share" "internal" "api" . | include "helm-toolkit.endpoints.endpoint_port_lookup" | set .Values.conf.manila.DEFAULT "osapi_share_listen_port" -}}
 {{- end -}}
@@ -100,3 +110,5 @@ data:
   {{ printf "%s.filters" $filePrefix }}: {{ $value.content | b64enc }}
 {{- end }}
 {{- end }}
+
+
