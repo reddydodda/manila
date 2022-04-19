@@ -455,7 +455,7 @@ endpoints:
     scheme: rabbit
     statefulset:
       name: openstack-rabbitmq-rabbitmq
-      replicas: 2
+      replicas: 1
     port:
       amqp:
         default: 5672
