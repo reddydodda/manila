@@ -114,19 +114,19 @@ conf:
       memcache_security_strategy: ENCRYPT
     neutron:
       auth_type: password
-      auth_section: keystone_authtoken
+      auth_version: v3
       endpoint_type: internal
     nova:
       auth_type: password
-      auth_section: keystone_authtoken
+      auth_version: v3
       endpoint_type: internal
     cinder:
       auth_type: password
-      auth_section: keystone_authtoken
+      auth_version: v3
       endpoint_type: internal
     glance:
       auth_type: password
-      auth_section: keystone_authtoken
+      auth_version: v3
       endpoint_type: internal
     database:
       connection_recycle_time: 300
@@ -222,7 +222,7 @@ endpoints:
         default_domain_id: default
         region_name: RegionOne
         username: admin
-        password: ZApbTdk1AMGJcEzXVP55483zAsyk0W0f
+        password: d7GPSxejMjcsbAXu0aUEMBT6kCbsaKn6
         project_name: admin
         user_domain_name: default
         project_domain_name: default
@@ -232,6 +232,36 @@ endpoints:
         username: manila
         password: password
         project_name: service
+        user_domain_name: service
+        project_domain_name: service
+      neutron:
+        role: admin
+        region_name: RegionOne
+        username: neutronBH6IJxt
+        password: sSHgqemudY3I0WNYCJGuH7qTxn6hnnCy
+        project_name: service
+        user_domain_name: service
+        project_domain_name: service
+      nova:
+        region_name: RegionOne
+        project_name: service
+        username: novaKKmQ
+        password: PzKrVs4dp2lELDv5EpbjPEbSDBKFb3fV
+        user_domain_name: service
+        project_domain_name: service
+      cinder:
+        role: admin
+        region_name: RegionOne
+        username: cinderZ7Hya4
+        password: E8EaQgi9TfXmF2Lfhp2YWMFxXWv9t9D8
+        project_name: service
+        user_domain_name: service
+        project_domain_name: service
+      glance:
+        region_name: RegionOne
+        project_name: service
+        username: glance9AQMuL
+        password: WAWEFvumpyGyhimH7wN0ChZbYwRXCXI5
         user_domain_name: service
         project_domain_name: service
   share:
@@ -432,7 +462,7 @@ endpoints:
     auth:
       admin:
         username: root
-        password: hA0k2c6xaDg3gT064DCFzGIAKll28MW6
+        password: MII9NdjIVdfRs1XEmb3yKCyvmsC5GQM9
       manila:
         username: manila
         password: password
@@ -440,9 +470,9 @@ endpoints:
     auth:
       admin:
         username: rabbitmq
-        password: qNu7kNht4wFjPydX9Ye5vk3jFdPqFedq
+        password: QEgx8HNQz57Z7trLYdUjGp3ZsKwkBsz6
       user:
-        password: qNu7kNht4wFjPydX9Ye5vk3jFdPqFedq
+        password: QEgx8HNQz57Z7trLYdUjGp3ZsKwkBsz6
         username: rabbitmq
       manila:
         username: manila
@@ -462,6 +492,8 @@ endpoints:
       http:
         default: 15672
   oslo_cache:
+    auth:
+      memcache_secret_key: password
     statefulset:
       name: openstack-memcached-memcached
       replicas: 3
