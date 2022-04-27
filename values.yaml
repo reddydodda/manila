@@ -63,6 +63,37 @@ images:
       - image_repo_sync
 
 pod:
+  probes:
+    rpc_timeout: 30
+    rpc_retries: 2
+    scheduler:
+      default:
+        readiness:
+          enabled: false
+          params:
+            initialDelaySeconds: 80
+            periodSeconds: 90
+            timeoutSeconds: 65
+        liveness:
+          enabled: false
+          params:
+            initialDelaySeconds: 120
+            periodSeconds: 90
+            timeoutSeconds: 65
+    share:
+      default:
+        readiness:
+          enabled: false
+          params:
+            initialDelaySeconds: 80
+            periodSeconds: 90
+            timeoutSeconds: 65
+        liveness:
+          enabled: false
+          params:
+            initialDelaySeconds: 120
+            periodSeconds: 90
+            timeoutSeconds: 65
   user:
     manila:
       uid: 42424
@@ -1134,8 +1165,8 @@ manifests:
   configmap_bin: true
   configmap_etc: true
   deployment_api: true
-  deployment_scheduler: true
-  deployment_share: true
+  statefulset_scheduler: true
+  statefulset_share: true
   ingress_api: true
   job_bootstrap: true
   job_clean: true

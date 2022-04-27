@@ -160,11 +160,13 @@ conf:
       driver_handles_share_servers: True
       share_backend_name: GENERIC
       share_driver: manila.share.drivers.generic.GenericShareDriver
-      service_instance_flavor_id: 100
+      service_instance_flavor_id: 60473f34-e9f2-4ab9-bb36-2f4ac12cbc32
       service_image_name: manila-service-image
       service_instance_user: manila
       service_instance_password: password
-      interface_driver: manila.network.linux.interface.BridgeInterfaceDriver
+      interface_driver: manila.network.linux.interface.OVSInterfaceDriver
+      service_network_name: manila_service_network
+      service_network_cidr: 10.10.10.0/24
     #cephfs1:
     #  driver_handles_share_servers: False
     #  share_backend_name: CEPHFS1
@@ -174,6 +176,20 @@ conf:
     #  cephfs_auth_id: manila
     #  cephfs_cluster_name: ceph
     #  cephfs_enable_snapshots: False
+
+    #cdotSingleSVM:
+    #  share_backend_name: cdotSingleSVM
+    #  share_driver: manila.share.drivers.netapp.common.NetAppDriver
+    #  driver_handles_share_servers: False
+    #  netapp_storage_family: ontap_cluster
+    #  netapp_server_hostname: hostname
+    #  netapp_server_port: 80
+    #  netapp_login: admin_username
+    #  netapp_password: admin_password
+    #  netapp_vserver: svm_name
+    #  netapp_transport_type: https
+    #  netapp_aggregate_name_search_pattern: ^((?!aggr0).)*$
+    
   rally_tests:
     run_tempest: false
     tests:
@@ -524,29 +540,4 @@ endpoints:
       replicas: 1
 
 manifests:
-  configmap_bin: true
-  configmap_etc: true
-  deployment_api: true
-  deployment_scheduler: true
-  deployment_share: true
-  ingress_api: true
-  job_bootstrap: true
-  job_clean: true
-  job_db_init: true
-  job_image_repo_sync: true
-  job_rabbit_init: true
-  job_db_sync: true
-  job_db_drop: false
-  job_ks_endpoints: true
-  job_ks_service: true
-  job_ks_user: true
-  job_storage_init: true
-  pdb_api: true
-  pod_rally_test: true
-  network_policy: false
-  secret_db: true
-  secret_ingress_tls: true
-  secret_keystone: true
-  secret_rabbitmq: true
-  service_api: true
-  service_ingress_api: true
+  pod_rally_test: false
