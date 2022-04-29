@@ -161,6 +161,9 @@ spec:
             {{- end }}
             - name: run
               mountPath: /run
+            - name: host-rootfs
+              mountPath: /mnt/host-rootfs
+              readOnly: true
 {{- dict "enabled" $envAll.Values.manifests.certificates "name" $envAll.Values.endpoints.oslo_db.auth.admin.secret.tls.internal "path" "/etc/mysql/certs" | include "helm-toolkit.snippets.tls_volume_mount" | indent 12 }}
 {{ if $mounts_manila_share.shareMounts }}{{ toYaml $mounts_manila_share.shareMounts | indent 12 }}{{ end }}
       volumes:
@@ -186,6 +189,9 @@ spec:
         - name: run
           hostPath:
             path: /run
+        - name: host-rootfs
+          hostPath:
+            path: /
 {{- dict "enabled" $envAll.Values.manifests.certificates "name" $envAll.Values.endpoints.oslo_db.auth.admin.secret.tls.internal | include "helm-toolkit.snippets.tls_volume" | indent 8 }}
 {{ if $mounts_manila_share.shares }}{{ toYaml $mounts_manila_share.shares | indent 8 }}{{ end }}
 {{- end }}
