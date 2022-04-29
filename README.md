@@ -1,9 +1,124 @@
+## Pre-Requisite 
+
+1. Deploy MOSK ( https://docs.mirantis.com/mosk/latest/deploy/deploy-openstack.html )
+2. update osdpl to create rabitmq users for manila 
+
+```shell
+  services:
+    messaging:
+      rabbitmq:
+        values:
+          conf:
+            aux_conf:
+              policies:
+              - definition:
+                  message-ttl: 120000
+                name: default-policy-manila
+                pattern: ^(?!amq\.).*
+                vhost: manila
+              - definition:
+                  expires: 3600000
+                name: results_expire_manila
+                pattern: ^results\.
+                priority: 1
+                vhost: manila
+              - definition:
+                  expires: 3600000
+                name: tasks_expire_manila
+                pattern: ^tasks\.
+                priority: 1
+                vhost: manila
+            users:
+              manila_service:
+                auth:
+                  manila:
+                    password: password
+                    username: manila
+                path: /manila
+              manila_service_notifications:
+                auth:
+                  manila:
+                    password: password
+                    username: manila
+                path: /openstack
+
+```
+3. update manila values 
+
+`endpoints:oslo_db:admin:username`  && `endpoints:oslo_db:admin:password`
+
+ ```shell
+ kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.database}' | base64 -d | jq -r '.username'
+ root
+
+ kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.database}' | base64 -d | jq -r '.password'
+ MII9NdjIVdfRs1XEmb3yKCyvmsC5GQM9
+ ```
+
+`endpoints:oslo_messaging:admin:username`  & `endpoints:oslo_messaging:admin:password`
+
+ ```shell
+ kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.messaging}' | base64 -d | jq -r '.username'
+ rabbitmq
+
+ kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.messaging}' | base64 -d | jq -r '.password'
+ QEgx8HNQz57Z7trLYdUjGp3ZsKwkBsz6
+ ```
+
+`endpoints:identity:auth:admin:username`  & `endpoints:identity:auth:admin:password`
+
+ ```shell
+ kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.identity}' | base64 -d | jq -r '.username'
+ admin
+
+ kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.identity}' | base64 -d | jq -r '.password'
+ d7GPSxejMjcsbAXu0aUEMBT6kCbsaKn6
+ ```
+
+
+
+`endpoints:identity:auth:nova:username` && `endpoints:identity:auth:nova:password` 
+
+ ```shell
+ kubectl -n openstack get secrets nova-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
+ kubectl -n openstack get secrets nova-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
+ ```
+
+`endpoints:identity:auth:neutron:username` && `endpoints:identity:auth:neutron:password` 
+
+ ```shell
+ kubectl -n openstack get secrets neutron-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
+ kubectl -n openstack get secrets neutron-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
+ ```
+
+`endpoints:identity:auth:cinder:username` && `endpoints:identity:auth:cinder:password` 
+
+ ```shell
+ kubectl -n openstack get secrets cinder-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
+ kubectl -n openstack get secrets cinder-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
+ ```
+
+`endpoints:identity:auth:glance:username` && `endpoints:identity:auth:glance:password` 
+
+ ```shell
+ kubectl -n openstack get secrets glance-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
+ kubectl -n openstack get secrets glance-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
+ ```
+
+
+4. copy helm charts to openstack-controller
+
+`kubectl cp manila/ osh-system/openstack-controller-5d96cc84db-s5t7d:/root/ -c osdpl`
+
+5. install helm chart by loginign to openstack-controller
+
+```shell
 helm3 upgrade --install openstack-manila ./manila --namespace=openstack --values=manila/values_override.yaml
 
 helm3 get values -n openstack openstack-manila
+```
 
 
-helm3 delete openstack-manila -n openstack
 
 
 ####################
@@ -24,58 +139,6 @@ manila-share --config-file /etc/manila/manila.conf --config-file /etc/manila/con
 
 
 ovs-vsctl --no-wait show
-
-###################
-get passwords
-###################
- 
-
-kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.database}' | base64 -d | jq -r '.username'
-root
-
-kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.database}' | base64 -d | jq -r '.password'
-MII9NdjIVdfRs1XEmb3yKCyvmsC5GQM9
-
-kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.identity}' | base64 -d | jq -r '.username'
-admin
-
-kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.identity}' | base64 -d | jq -r '.password'
-d7GPSxejMjcsbAXu0aUEMBT6kCbsaKn6
-
-kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.messaging}' | base64 -d | jq -r '.username'
-rabbitmq
-
-kubectl -n openstack get secrets openstack-admin-users -ojsonpath='{.data.messaging}' | base64 -d | jq -r '.password'
-QEgx8HNQz57Z7trLYdUjGp3ZsKwkBsz6
-
-
-
-
-
-#Nova
-
-kubectl -n openstack get secrets nova-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
-kubectl -n openstack get secrets nova-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
-
-
-#Neutron
-
-kubectl -n openstack get secrets neutron-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
-kubectl -n openstack get secrets neutron-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
-
-
-#Cinder
-
-kubectl -n openstack get secrets cinder-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
-kubectl -n openstack get secrets cinder-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
-
-#Glance
-
-kubectl -n openstack get secrets glance-keystone-user -ojsonpath='{.data.OS_USERNAME}' | base64 -d
-kubectl -n openstack get secrets glance-keystone-user -ojsonpath='{.data.OS_PASSWORD}' | base64 -d
-
-
-
 
 
 ##################
@@ -107,7 +170,7 @@ filter = [ "a/vda/", "a/vdb/", "a/vdc/", "a/vdd/", "r/.*/"]
 https://gerrit.mcp.mirantis.com/c/kaas/core/+/127791/2/bootstrap/releases/cluster/8.7.0-rc.yaml
 
 kubectl -n ceph-lcm-mirantis edit deploy ceph-controller
-# change image to: 127.0.0.1:44301/ceph/mcp/ceph-controller:v1.0.0-20220401131257
+change image to: 127.0.0.1:44301/ceph/mcp/ceph-controller:v1.0.0-20220401131257
 
 #################
 
