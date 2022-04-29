@@ -106,11 +106,32 @@
  ```
 
 
-4. copy helm charts to openstack-controller
+
+4. update NetApp configs 
+
+```shell
+conf:
+  backends:
+    [cdotMultipleSVM]
+    share_backend_name=cdotMultipleSVM
+    share_driver=manila.share.drivers.netapp.common.NetAppDriver
+    driver_handles_share_servers=True
+    netapp_storage_family=ontap_cluster
+    netapp_server_hostname=hostname
+    netapp_server_port=80
+    netapp_login=admin_username
+    netapp_password=admin_password
+    netapp_transport_type=https
+    netapp_root_volume_aggregate=aggr1
+    netapp_aggregate_name_search_pattern=^((?!aggr0).)*$
+
+```
+
+5. copy helm charts to openstack-controller
 
 `kubectl cp manila/ osh-system/openstack-controller-5d96cc84db-s5t7d:/root/ -c osdpl`
 
-5. install helm chart by loginign to openstack-controller
+6. install helm chart by loginign to openstack-controller
 
 ```shell
 helm3 upgrade --install openstack-manila ./manila --namespace=openstack --values=manila/values_override.yaml
