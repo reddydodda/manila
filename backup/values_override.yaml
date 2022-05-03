@@ -1,4 +1,4 @@
-# Copyright 2022 Mirantis Inc.
+# Copyright 2017 The Openstack-Helm Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -155,7 +155,7 @@ conf:
       share_backend_name: LVM
       share_driver: manila.share.drivers.lvm.LVMShareDriver
       lvm_share_volume_group: manila-volumes
-      lvm_share_export_ips: 172.16.98.16
+      lvm_share_export_ips: 172.16.98.16,172.16.98.17,172.16.98.18
     #generic:
     #  driver_handles_share_servers: True
     #  share_backend_name: GENERIC
