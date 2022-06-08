@@ -105,6 +105,8 @@ spec:
               mountPath: /etc/manila/policy.json
               subPath: policy.json
               readOnly: true
+            - name: manila-tmp
+              mountPath: /var/lib/manila
 {{ if $mounts_manila_api.volumeMounts }}{{ toYaml $mounts_manila_api.volumeMounts | indent 12 }}{{ end }}
       volumes:
         - name: manila-bin
@@ -115,5 +117,7 @@ spec:
           secret:
             secretName: manila-etc
             defaultMode: 0444
+        - name: manila-tmp
+          emptyDir: {}
 {{ if $mounts_manila_api.volumes }}{{ toYaml $mounts_manila_api.volumes | indent 8 }}{{ end }}
 {{- end }}

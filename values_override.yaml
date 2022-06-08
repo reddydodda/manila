@@ -183,6 +183,7 @@ conf:
     #cdotSingleSVM:
     #  share_backend_name: cdotSingleSVM
     #  share_driver: manila.share.drivers.netapp.common.NetAppDriver
+    #  network_api_class: manila.network.neutron.neutron_network_plugin.NeutronNetworkPlugin
     #  driver_handles_share_servers: False
     #  netapp_storage_family: ontap_cluster
     #  netapp_server_hostname: hostname
